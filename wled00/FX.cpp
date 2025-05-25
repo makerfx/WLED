@@ -392,6 +392,89 @@ uint16_t mode_breath(void) {
 }
 static const char _data_FX_MODE_BREATH[] PROGMEM = "Breathe@!;!,!;!;01";
 
+/*
+ * GODZILLA's Atomic Breath */
+
+/*MakerFX Custom FX setup*/
+#define MFX_ATOMIC_BREATH_MODE_DEFAULT      0
+#define MFX_ATOMIC_BREATH_MODE_CHARGE       1
+#define MFX_ATOMIC_BREATH_MODE_BLAST        2
+#define MFX_ATOMIC_BREATH_CHARGE_DURATION   2000
+#define MFX_ATOMIC_BREATH_BLAST_DURATION    3000
+/*---END MakerFX Custom FX setup*/
+
+uint16_t mode_atomic_breath(void) {
+
+  static long abTimer = 0;
+  static long abLastTimerReset = 0;
+  static long abLastCounter = 0;
+  static uint8_t abMode = 0;
+
+  //if another effect has been running, do a restart
+  if (strip.now - abLastCounter > 200) {
+    abMode = 0;
+    abLastTimerReset = strip.now;
+  } 
+
+  abLastCounter = strip.now;  
+  abTimer++;
+ 
+    
+
+  switch (abMode) {
+    case 0: //charge
+      SEGMENT.setPixelColor(0, 255, 0, 0 );   //set first pixel to indicate mode 
+      for (unsigned i = 1; i < SEGLEN; i++) {
+        SEGMENT.setPixelColor(i, 0, 255, 255 );
+        }
+      
+      if (strip.now - abLastTimerReset > MFX_ATOMIC_BREATH_CHARGE_DURATION){
+        abMode = 1; //switch to blast
+        abTimer = 0; //reset timer
+        abLastTimerReset = strip.now;
+        }
+      
+      break;
+    
+    case 1: //blast 
+      SEGMENT.setPixelColor(0, 0, 255, 0 ); 
+      for (unsigned i = 1; i < SEGLEN; i++) {
+          SEGMENT.setPixelColor(i, 255, 0, 0 );
+        }
+      
+      if (strip.now - abLastTimerReset > MFX_ATOMIC_BREATH_BLAST_DURATION){
+        abMode = 2; //switch to done
+        abTimer = 0; //reset timer
+        abLastTimerReset = strip.now;
+        }
+      break;
+
+    case 2: //off 
+      SEGMENT.setPixelColor(0, 0, 0, 255 ); 
+      for (unsigned i = 1; i < SEGLEN; i++) {
+          SEGMENT.setPixelColor(i, 0, 0, 0 );
+        }
+      
+      if (strip.now - abLastTimerReset > MFX_ATOMIC_BREATH_BLAST_DURATION){
+        abMode = 2; //switch to done
+        abTimer = 0; //reset timer
+        abLastTimerReset = strip.now;
+        }
+      break;
+ 
+    }
+
+  Serial.print(abMode);
+  Serial.print(":");
+  Serial.print(strip.now);
+  Serial.print("-->");
+  Serial.print(abTimer);
+  Serial.println("");
+  
+  
+  return FRAMETIME;
+}
+static const char _data_FX_MODE_ATOMIC_BREATH[] PROGMEM = "Atomic Breath@!;!,!;!;01";
 
 /*
  * Fades the LEDs between two colors
@@ -10748,6 +10831,8 @@ void WS2812FX::setupEffectData() {
   addEffect(FX_MODE_PARTICLEGHOSTRIDER, &mode_particleghostrider, _data_FX_MODE_PARTICLEGHOSTRIDER);
   addEffect(FX_MODE_PARTICLEBLOBS, &mode_particleblobs, _data_FX_MODE_PARTICLEBLOBS);
   addEffect(FX_MODE_PARTICLEGALAXY, &mode_particlegalaxy, _data_FX_MODE_PARTICLEGALAXY);
+  addEffect(FX_MODE_ATOMICBREATH, &mode_atomic_breath, _data_FX_MODE_ATOMIC_BREATH);
+  
 #endif // WLED_DISABLE_PARTICLESYSTEM2D
 #endif // WLED_DISABLE_2D
 
