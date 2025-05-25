@@ -24,3 +24,4 @@ wled-update.sh
 /wled00/wled00.ino.cpp
 /wled00/html_*.h
 .vscode/extensions.json
+/.vscode
